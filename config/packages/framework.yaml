@@ -1,0 +1,13 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+    http_method_override: false
+    handle_all_throwables: true
+    http_client: ~
+    serializer: { enabled: true }
+    validation: { enabled: true }
+    router:
+        utf8: true
+
+when@test:
+    framework:
+        test: true

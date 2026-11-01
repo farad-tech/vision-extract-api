@@ -1,0 +1,63 @@
+parameters:
+    ai.models: '%env(json:AI_MODELS_JSON)%'
+    ai.pricing: '%env(json:AI_PRICING_JSON)%'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Domain/'
+            - '../src/Application/Extraction/DTO/'
+            - '../src/Application/Extraction/Exception/'
+            - '../src/Presentation/Http/Request/ExtractionRequest.php'
+            - '../src/Kernel.php'
+
+    App\Domain\AI\Contract\AIProvider: '@App\Infrastructure\AI\Arvan\ArvanAIProvider'
+    App\Domain\Extraction\Contract\UsageRecorder: '@App\Infrastructure\Persistence\SqliteUsageRecorder'
+
+    # Dedicated, untraced client: image bytes and credentials must not enter profiler data.
+    app.arvan_http_client:
+        class: Symfony\Contracts\HttpClient\HttpClientInterface
+        factory: ['Symfony\Component\HttpClient\HttpClient', 'create']
+
+    App\Infrastructure\AI\Arvan\ArvanAIProvider:
+        arguments:
+            $client: '@app.arvan_http_client'
+            $endpoints: '%ai.models%'
+            $apiKey: '%env(ARVAN_API_KEY)%'
+            $baseUri: '%env(ARVAN_BASE_URI)%'
+            $timeoutSeconds: '%env(float:AI_REQUEST_TIMEOUT_SECONDS)%'
+            $maxRetries: '%env(int:AI_MAX_RETRIES)%'
+
+    App\Application\Extraction\ProcessImage\ModelRegistry:
+        arguments:
+            $models: '%ai.models%'
+            $defaultModel: '%env(AI_DEFAULT_MODEL)%'
+
+    App\Application\Extraction\ProcessImage\CostEstimator:
+        arguments:
+            $pricing: '%ai.pricing%'
+
+    App\Infrastructure\Image\ImageValidator:
+        arguments:
+            $maxBytes: '%env(int:IMAGE_MAX_BYTES)%'
+            $maxWidth: '%env(int:IMAGE_MAX_WIDTH)%'
+            $maxHeight: '%env(int:IMAGE_MAX_HEIGHT)%'
+            $maxPixels: '%env(int:IMAGE_MAX_PIXELS)%'
+
+    App\Infrastructure\Persistence\SqliteUsageRecorder:
+        arguments:
+            $path: '%env(resolve:USAGE_DATABASE_PATH)%'
+
+    App\Presentation\Http\EventSubscriber\ApiSubscriber:
+        arguments:
+            $apiKey: '%env(EXTRACTION_API_KEY)%'
+            $maxRequestBytes: '%env(int:API_MAX_REQUEST_BYTES)%'
+
+    App\Presentation\Http\Controller\:
+        resource: '../src/Presentation/Http/Controller/'
+        tags: ['controller.service_arguments']

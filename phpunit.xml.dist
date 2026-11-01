@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.0/phpunit.xsd"
+         bootstrap="tests/bootstrap.php" colors="true" cacheDirectory=".phpunit.cache"
+         failOnWarning="true" failOnRisky="true">
+    <php>
+        <env name="APP_ENV" value="test" force="true"/>
+        <env name="APP_DEBUG" value="1"/>
+        <env name="APP_SECRET" value="test-only-secret"/>
+        <env name="EXTRACTION_API_KEY" value="test-service-key" force="true"/>
+        <env name="ARVAN_API_KEY" value="test-arvan-key" force="true"/>
+        <env name="AI_DEFAULT_MODEL" value="test-model" force="true"/>
+        <env name="AI_MODELS_JSON" value='{"test-model":{"vision":true,"structured_output":false}}' force="true"/>
+        <env name="USAGE_DATABASE_PATH" value="%kernel.project_dir%/var/test-usage.sqlite" force="true"/>
+        <env name="KERNEL_CLASS" value="App\Kernel"/>
+    </php>
+    <testsuites>
+        <testsuite name="Project"><directory>tests</directory></testsuite>
+    </testsuites>
+    <source><include><directory suffix=".php">src</directory></include></source>
+</phpunit>
